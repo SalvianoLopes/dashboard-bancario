@@ -422,7 +422,7 @@ function Dashboard(){
     // Header
     React.createElement("header",{className:"hdr"},
       React.createElement("div",null,
-        React.createElement("div",{style:{fontSize:18,fontWeight:700}},"INBURSA"),
+        React.createElement("div",{style:{fontSize:18,fontWeight:700}},"Banco Digital"),
         React.createElement("div",{style:{fontSize:11,color:"#93c5fd",marginTop:2}},"Painel de Monitoramento Operacional")
       ),
       React.createElement("nav",{style:{display:"flex",gap:4}},
@@ -633,7 +633,7 @@ function Dashboard(){
       React.createElement("div",{className:"card",style:{padding:"0"}},
         React.createElement("div",{className:"card-hdr"},"O que e este dashboard?"),
         React.createElement("div",{style:{padding:"16px 20px",lineHeight:1.8,color:"#374151"}},
-          React.createElement("p",null,"O Painel de Monitoramento Operacional INBURSA acompanha mensalmente 20 indicadores de performance distribuidos em 5 areas: Operacional, Atendimento, Qualidade, Canais Criticos e Consignado Publico."),
+          React.createElement("p",null,"O painel acompanha mensalmente indicadores de performance operacional distribuídos por áreas: Operacional, Atendimento, Qualidade e Compliance."),
           React.createElement("p",{style:{marginTop:10}},"Resultado = Dentro do Prazo / Total de Casos. Para indicadores de erro (direcao <=), menor % = melhor."),
           React.createElement("p",{style:{marginTop:10}},"Gap = Resultado - Meta. Positivo = acima da meta (bom). Negativo = abaixo da meta (risco). Medido em pontos percentuais (pp).")
         )
@@ -644,7 +644,7 @@ function Dashboard(){
     React.createElement("div",{className:tab==="normas"?"pg act":"pg"},
       React.createElement("div",{className:"top-bar"},React.createElement("div",null,React.createElement("div",{className:"pg-title"},"Base Legal e Regulatoria"),React.createElement("div",{className:"pg-sub"},"Normas que fundamentam cada indicador"))),
       React.createElement("div",{style:{background:"#eff6ff",border:"0.5px solid #bfdbfe",borderRadius:12,padding:16,marginBottom:16,fontSize:13,color:"#1d4ed8"}},
-        React.createElement("strong",null,"Sobre este painel:")," Os indicadores monitorados pelo INBURSA estao alinhados com as principais normas do Banco Central do Brasil e do Conselho Monetario Nacional. O cumprimento dessas metas demonstra conformidade regulatoria."
+        React.createElement("strong",null,"Sobre este painel:")," Os indicadores monitorados estão alinhados com as principais normas regulatórias do setor financeiro. O cumprimento das metas demonstra conformidade operacional."
       ),
       [
         {norma:"Resolucao CMN 5.057/2022",tema:"Portabilidade de Credito Consignado",cor:"#1F4E79",inds:["Portabilidade — Retidos Indevidos","Troca de Averbaçao — SLA","Troca de Averbaçao — Qualidade"]},
