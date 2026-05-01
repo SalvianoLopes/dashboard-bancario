@@ -1,0 +1,702 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plataforma de Gestão Operacional — Banco Digital</title>
+<meta name="description" content="Painel de Monitoramento de Indicadores Operacionais">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#f0f4f8;color:#1e293b;font-size:14px;min-height:100vh}
+#root{min-height:100vh}
+.hdr{background:#1F4E79;color:#fff;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nb{background:none;border:none;color:rgba(255,255,255,.7);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.nb:hover{background:rgba(255,255,255,.15);color:#fff}
+.nb.act{background:rgba(255,255,255,.2);color:#fff}
+.pg{display:none;padding:20px}
+.pg.act{display:block}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.pg-title{font-size:18px;font-weight:700;color:#1F4E79}
+.pg-sub{font-size:12px;color:#64748b;margin-top:2px}
+.sel{border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#334155;background:#fff;cursor:pointer;outline:none}
+.kpi-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-top:3px solid #1F4E79;border-radius:10px;padding:14px 18px;min-width:130px;flex:1}
+.kpi-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px}
+.kpi-val{font-size:28px;font-weight:700;color:#1e293b;line-height:1}
+.kpi-hint{font-size:11px;color:#94a3b8;margin-top:4px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:16px;overflow:hidden}
+.card-hdr{background:#1F4E79;color:#fff;padding:10px 16px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1f5f9;padding:9px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+td{padding:9px 12px;border-bottom:.5px solid #f1f5f9;vertical-align:middle}
+tr:hover td{background:#f8fafc}
+.mono{font-family:'DM Mono',monospace;font-size:12px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.bv{background:#dcfce7;color:#15803d}
+.ba{background:#fef3c7;color:#92400e}
+.br{background:#fee2e2;color:#991b1b}
+.bn{background:#f1f5f9;color:#64748b}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px}
+.chart-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#64748b;margin-bottom:12px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.form-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.form-ind{font-size:13px;font-weight:600;color:#1F4E79;margin-bottom:2px}
+.form-resp{font-size:11px;color:#64748b;margin-bottom:10px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-field label{display:block;font-size:11px;font-weight:600;color:#475569;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.form-field input{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.form-field input:focus{border-color:#1F4E79;box-shadow:0 0 0 3px rgba(31,78,121,.1)}
+.save-all-btn{background:#1F4E79;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.save-all-btn:hover{background:#163c60}
+.save-all-btn:disabled{background:#94a3b8;cursor:not-allowed}
+.note{padding:10px 14px;border-radius:8px;font-size:12px;margin-top:10px}
+.note-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.note-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.toast{position:fixed;bottom:24px;right:24px;background:#1F4E79;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:768px){.kpi-row{flex-direction:column}.charts-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:14px;color:#64748b">Carregando...</div></div>
+
+<script src="chunks/webpack.js"></script>
+<script>
+// Shim React modules into webpack module registry
+// Module 2265 = React (hooks, state, etc.)
+// Module 7437 = React JSX Runtime
+window.__wp_modules[2265] = function(module, exports, require) {
+  module.exports = window.React;
+};
+window.__wp_modules[7437] = function(module, exports, require) {
+  module.exports = window.React;
+  exports.jsx = React.createElement;
+  exports.jsxs = React.createElement;
+  exports.Fragment = React.Fragment;
+  exports.default = React.createElement;
+};
+window.__wp_modules[5689] = function(module, exports, require) {
+  module.exports = window.ReactDOM;
+};
+window.__wp_modules[5733] = function(module, exports, require) {
+  module.exports = window.ReactDOM;
+};
+</script>
+
+<script>
+// ============================================================
+// Plataforma de Gestão Operacional — Banco Digital
+// Versão de demonstração · Portfólio
+
+
+// ============================================================
+(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[931],{
+193:function(e,a,o){
+  Promise.resolve().then(o.bind(o,6774))
+},
+6774:function(e,a,o){
+"use strict";
+o.r(a);
+o.d(a,{default:function(){return Dashboard}});
+
+var i=o(7437);
+var s=o(2265);
+
+// ── CONFIG ──────────────────────────────────────────────────
+// ── CONFIGURAÇÃO ──────────────────────────────────────
+var SUPABASE_URL="";
+var SUPABASE_ANON_KEY="";
+var HEADERS={};
+// ────────────────────────────────────────────────────────────
+// ── DEMO DATA (portfólio) ─────────────────────────────────
+var DEMO_CONFIG_INDICADORES=[
+{id:1,numero:1,nome:"Portabilidade — Retidos Indevidos",meta:0.02,direcao:"≤",responsavel:"Operações Bancárias"},
+{id:2,numero:2,nome:"Reincidência de Reclamações",meta:0.05,direcao:"≤",responsavel:"Atendimento ao Cliente"},
+{id:3,numero:3,nome:"Resolução no Primeiro Contato",meta:0.80,direcao:"≥",responsavel:"Central de Atendimento"},
+{id:4,numero:4,nome:"SLA de Resposta ao Cliente",meta:0.95,direcao:"≥",responsavel:"Operações"},
+{id:5,numero:5,nome:"Divergências Operacionais",meta:0.01,direcao:"≤",responsavel:"Compliance"},
+{id:6,numero:6,nome:"Envio de CCB / Disponibilizar Evidência",meta:0.90,direcao:"≥",responsavel:"Jurídico"},
+{id:7,numero:7,nome:"Acuracidade Cadastral",meta:0.98,direcao:"≥",responsavel:"Cadastro"},
+{id:8,numero:8,nome:"Formalização de Contratos no Prazo",meta:0.92,direcao:"≥",responsavel:"Contratos"},
+{id:9,numero:9,nome:"Liquidações Dentro do Prazo",meta:0.95,direcao:"≥",responsavel:"Financeiro"},
+{id:10,numero:10,nome:"Taxa de Contestações de Débito",meta:0.03,direcao:"≤",responsavel:"Cobrança"},
+{id:11,numero:11,nome:"Conformidade Regulatória BACEN",meta:0.99,direcao:"≥",responsavel:"Compliance"},
+{id:12,numero:12,nome:"Cancelamentos Indevidos",meta:0.02,direcao:"≤",responsavel:"Retenção"},
+{id:13,numero:13,nome:"Abertura de Conta no Prazo (SLA)",meta:0.88,direcao:"≥",responsavel:"Onboarding"},
+{id:14,numero:14,nome:"Falhas em Operações Digitais",meta:0.005,direcao:"≤",responsavel:"TI"},
+{id:15,numero:15,nome:"Índice de Satisfação (NPS Interno)",meta:0.85,direcao:"≥",responsavel:"Qualidade"},
+{id:16,numero:16,nome:"Documentação Incompleta",meta:0.03,direcao:"≤",responsavel:"Backoffice"},
+{id:17,numero:17,nome:"Estornos Processados no Prazo",meta:0.90,direcao:"≥",responsavel:"Financeiro"},
+{id:18,numero:18,nome:"Bloqueios Indevidos de Conta",meta:0.01,direcao:"≤",responsavel:"Compliance"},
+{id:19,numero:19,nome:"Aprovações de Crédito no Prazo",meta:0.75,direcao:"≥",responsavel:"Crédito"},
+{id:20,numero:20,nome:"Encerramento de Ocorrências (Prazo)",meta:0.93,direcao:"≥",responsavel:"Qualidade"}
+];
+var DEMO_BASE_DADOS=(function(){
+var ms=["Dezembro 2025","Janeiro 2026","Fevereiro 2026","Março 2026","Abril 2026","Maio 2026","Junho 2026","Julho 2026","Agosto 2026","Setembro 2026","Outubro 2026","Novembro 2026","Dezembro 2026"];
+var rows=[];var id=1;var seed=99371;
+function rng(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+DEMO_CONFIG_INDICADORES.forEach(function(cfg){
+  ms.forEach(function(mes){
+    var total=Math.round(rng()*450+50);
+    var pct;
+    if(cfg.direcao==="≤"){pct=rng()*cfg.meta*1.5+cfg.meta*0.1}
+    else{pct=Math.min(1,rng()*(1-cfg.meta)*0.5+cfg.meta*0.88)}
+    var dentro=Math.round(total*pct);
+    rows.push({id:id++,mes:mes,indicador:cfg.nome,total_casos:total,dentro_prazo:dentro,resultado_pct:pct,tombamento_compulsorio:cfg.nome==="Envio de CCB / Disponibilizar Evidência"?Math.round(total*0.05):0,updated_at:new Date().toISOString()});
+  });
+});
+return rows;
+})();
+// ────────────────────────────────────────────────────────────
+
+var MESES=["Dezembro 2025","Janeiro 2026","Fevereiro 2026","Março 2026","Abril 2026","Maio 2026","Junho 2026","Julho 2026","Agosto 2026","Setembro 2026","Outubro 2026","Novembro 2026","Dezembro 2026"];
+var MESES_LABEL=["Dezembro 2025","Janeiro 2026","Fevereiro 2026","Março 2026","Abril 2026","Maio 2026","Junho 2026","Julho 2026","Agosto 2026","Setembro 2026","Outubro 2026","Novembro 2026","Dezembro 2026"];
+var MESES_SHORT=["Dez/25","Jan/26","Fev/26","Mar/26","Abr/26","Mai/26","Jun/26","Jul/26","Ago/26","Set/26","Out/26","Nov/26","Dez/26"];
+
+var LABELS_ESPECIAIS={
+  "Portabilidade — Retidos Indevidos":{total:"Total de portabilidades solicitadas",prazo:"Retidas por erro (indevido)"},
+  "Reincidência de Reclamações":{total:"Total de reclamações no mês",prazo:"Reincidentes (mesmo cliente/motivo)"},
+  "Divergências Operacionais":{total:"Total de operações realizadas",prazo:"Operações com erro/divergência"}
+};
+var LABELS_PADRAO={total:"Total Casos",prazo:"Dentro do Prazo"};
+
+function calcResultado(dados, config) {
+  if(!dados||0===dados.total_casos)return null;
+  if("Envio de CCB / Disponibilizar Evidência"===config.nome){
+    var base=dados.total_casos-(dados.tombamento_compulsorio||0);
+    return base>0?dados.dentro_prazo/base:null;
+  }
+  return dados.dentro_prazo/dados.total_casos;
+}
+
+function calcStatus(resultado, config) {
+  if(resultado===null)return"-";
+  var dir=config.direcao.trim();
+  if(dir==="≥"||dir===">="){
+    if(resultado>=config.meta)return"OK";
+    if(resultado>=config.meta-.05)return"WARN";
+    return"ERR";
+  }
+  if(resultado<=config.meta)return"OK";
+  if(resultado<=config.meta+.03)return"WARN";
+  return"ERR";
+}
+
+function calcGap(resultado, config) {
+  if(resultado===null)return null;
+  var dir=config.direcao.trim();
+  return(dir==="≥"||dir===">=")?resultado-config.meta:config.meta-resultado;
+}
+
+function fmtPct(v){return v===null?"--":(100*v).toFixed(1)+"%"}
+function fmtNum(v){return v===0?"--":v.toLocaleString("pt-BR")}
+
+function BadgeStatus(props){
+  var s=props.s;
+  if(s==="OK")return React.createElement("span",{className:"badge bv"},"OK");
+  if(s==="WARN")return React.createElement("span",{className:"badge ba"},"Atencao");
+  if(s==="ERR")return React.createElement("span",{className:"badge br"},"Critico");
+  return React.createElement("span",{className:"badge bn"},"--");
+}
+
+function Dashboard(){
+  var tabState=s.useState("dash");
+  var tab=tabState[0]; var setTab=tabState[1];
+  var configState=s.useState([]);
+  var configs=configState[0]; var setConfigs=configState[1];
+  var dadosState=s.useState([]);
+  var dados=dadosState[0]; var setDados=dadosState[1];
+  var mesState=s.useState("Março 2026");
+  var mesSel=mesState[0]; var setMesSel=mesState[1];
+  var toastMsgState=s.useState("");
+  var toastMsg=toastMsgState[0]; var setToastMsg=toastMsgState[1];
+  var toastVisState=s.useState(false);
+  var toastVis=toastVisState[0]; var setToastVis=toastVisState[1];
+  var savingState=s.useState(false);
+  var saving=savingState[0]; var setSaving=savingState[1];
+  var editState=s.useState({});
+  var editData=editState[0]; var setEditData=editState[1];
+  var chartERef=s.useRef(null);
+  var chartGRef=s.useRef(null);
+  var chartVRef=s.useRef(null);
+  var chartVDataRef=s.useRef([]);
+  var drilldownState=s.useState(null);
+  var drilldown=drilldownState[0]; var setDrilldown=drilldownState[1];
+
+  s.useEffect(function(){
+    setConfigs(DEMO_CONFIG_INDICADORES);
+    setDados(DEMO_BASE_DADOS);
+  },[]);
+
+  s.useEffect(function(){
+    function handler(ev){if(ev.detail)setDrilldown(ev.detail)}
+    window.addEventListener("drilldown",handler);
+    return function(){window.removeEventListener("drilldown",handler)};
+  },[]);
+
+  function getDadosMes(mes){return dados.filter(function(d){return d.mes===mes})}
+  function getDado(mes,ind){return dados.find(function(d){return d.mes===mes&&d.indicador===ind})}
+
+  function calcYTD(nomInd,mes){
+    var idx=MESES.indexOf(mes);
+    var vals=MESES.slice(0,idx+1).map(function(m){
+      var d=getDado(m,nomInd);
+      var c=configs.find(function(x){return x.nome===nomInd});
+      return(d&&c)?calcResultado(d,c):null;
+    }).filter(function(v){return v!==null});
+    return vals.length?vals.reduce(function(a,b){return a+b},0)/vals.length:null;
+  }
+
+  function calcTendencia(nomInd,mes){
+    var idx=MESES.indexOf(mes);
+    if(idx<1)return"--";
+    var c=configs.find(function(x){return x.nome===nomInd});
+    if(!c)return"--";
+    var curr=calcResultado(getDado(mes,nomInd),c);
+    var prev=calcResultado(getDado(MESES[idx-1],nomInd),c);
+    if(curr===null||prev===null)return"--";
+    var diff=curr-prev;
+    if(Math.abs(diff)<.001)return"Estavel";
+    var dir=c.direcao.trim();
+    if(dir==="≥"||dir===">=")return diff>0?"Melhora":"Piora";
+    return diff<0?"Melhora":"Piora";
+  }
+
+  s.useEffect(function(){
+    if(tab!=="exec"||configs.length===0)return;
+    var W=window;
+    function buildCharts(){
+      var mesIdx=MESES.indexOf(mesSel);
+      var dadosMes=getDadosMes(mesSel);
+      var labels=MESES_SHORT.slice(0,mesIdx+1);
+      var lineData=MESES.slice(0,mesIdx+1).map(function(m){
+        var vals=configs.map(function(c){
+          var d=getDado(m,c.nome);
+          return d?calcResultado(d,c):null;
+        }).filter(function(v){return v!==null});
+        return vals.length?parseFloat((vals.reduce(function(a,b){return a+b},0)/vals.length*100).toFixed(1)):null;
+      });
+
+      var canvE=document.getElementById("ch-e");
+      if(canvE){
+        if(chartERef.current)chartERef.current.destroy();
+        chartERef.current=new W.Chart(canvE,{type:"line",data:{labels:labels,datasets:[
+          {label:"Resultado",data:lineData,borderColor:"#1F4E79",backgroundColor:"rgba(31,78,121,.1)",borderWidth:2.5,pointRadius:4,fill:true,spanGaps:true},
+          {label:"Meta 95%",data:labels.map(function(){return 95}),borderColor:"#f59e0b",borderDash:[4,4],borderWidth:1.5,pointRadius:0}
+        ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:105,ticks:{callback:function(v){return v+"%"}}},x:{}}}});
+      }
+
+      var gaps=configs.map(function(c){
+        var d=dadosMes.find(function(x){return x.indicador===c.nome});
+        var g=calcGap(d?calcResultado(d,c):null,c);
+        return{n:c.nome.length>22?c.nome.slice(0,22)+"...":c.nome,a:g!==null?Math.abs(g):0,pos:g!==null&&g>=0,g:g};
+      }).filter(function(x){return x.g!==null}).sort(function(a,b){return a.a-b.a}).slice(0,5);
+
+      var canvG=document.getElementById("ch-g");
+      if(canvG){
+        if(chartGRef.current)chartGRef.current.destroy();
+        chartGRef.current=new W.Chart(canvG,{type:"bar",data:{labels:gaps.map(function(x){return x.n}),datasets:[{label:"Gap",data:gaps.map(function(x){return parseFloat((100*x.a).toFixed(1))}),backgroundColor:gaps.map(function(x){return x.pos?"#22c55e":"#ef4444"}),borderRadius:4}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return v+"pp"}}}}}});
+      }
+
+      var volMap={};
+      configs.forEach(function(c){
+        var d=dadosMes.find(function(x){return x.indicador===c.nome});
+        if(d&&d.total_casos)volMap[c.responsavel]=(volMap[c.responsavel]||0)+d.total_casos;
+      });
+      var volArr=Object.entries(volMap).sort(function(a,b){return b[1]-a[1]});
+      chartVDataRef.current=volArr;
+
+      var canvV=document.getElementById("ch-v");
+      if(canvV){
+        if(chartVRef.current)chartVRef.current.destroy();
+        chartVRef.current=new W.Chart(canvV,{type:"bar",data:{labels:volArr.map(function(x){return x[0].split("/")[0].trim()}),datasets:[{label:"Casos",data:volArr.map(function(x){return x[1]}),backgroundColor:"#2E75B6",borderRadius:4,hoverBackgroundColor:"#1F4E79"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},onClick:function(ev,els){if(els&&els.length>0){var resp=chartVDataRef.current[els[0].index];if(resp)window.dispatchEvent(new CustomEvent("drilldown",{detail:resp[0]}))}},onHover:function(ev,els){var c=document.getElementById("ch-v");if(c)c.style.cursor=els&&els.length>0?"pointer":"default"}}});
+      }
+    }
+    if(W.Chart)buildCharts();
+    else setTimeout(function(){if(window.Chart)buildCharts()},800);
+  },[tab,mesSel,configs,dados]);
+
+  s.useEffect(function(){
+    if(!configs.length)return;
+    var m={};
+    configs.forEach(function(c){
+      var d=getDado(mesSel,c.nome);
+      m[c.nome]={t:(d&&d.total_casos)||0,p:(d&&d.dentro_prazo)||0};
+    });
+    setEditData(m);
+  },[mesSel,configs,dados]);
+
+  async function salvarTodos(){
+    setSaving(true);
+    for(var c of configs){
+      var ed=editData[c.nome];
+      if(!ed)continue;
+      var res=ed.t>0?ed.p/ed.t:null;
+      var row=DEMO_BASE_DADOS.find(function(d){return d.mes===mesSel&&d.indicador===c.nome});
+      if(row){row.total_casos=ed.t;row.dentro_prazo=ed.p;row.resultado_pct=res;row.updated_at=new Date().toISOString()}
+    }
+    setDados(DEMO_BASE_DADOS.slice());
+    setSaving(false);
+    setToastMsg("Modo Demo — alterações aplicadas localmente");
+    setToastVis(true);
+    setTimeout(function(){setToastVis(false)},3000);
+  }
+
+  if(!configs.length){
+    return React.createElement("div",{style:{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontSize:14,color:"#64748b"}},"Carregando...");
+  }
+
+  var dadosMes=getDadosMes(mesSel);
+  var mesIdx=MESES.indexOf(mesSel);
+  var conform=0,atenc=0,crit=0,totalCasos=0;
+  configs.forEach(function(c){
+    var d=dadosMes.find(function(x){return x.indicador===c.nome});
+    if(!d)return;
+    totalCasos+=d.total_casos||0;
+    var st=calcStatus(calcResultado(d,c),c);
+    if(st==="OK")conform++;
+    else if(st==="WARN")atenc++;
+    else if(st==="ERR")crit++;
+  });
+  var score=Math.round(conform/configs.length*100);
+  var prevScore=null;
+  if(mesIdx>0){
+    var prevDados=getDadosMes(MESES[mesIdx-1]);
+    var prevConf=0;
+    configs.forEach(function(c){
+      var d=prevDados.find(function(x){return x.indicador===c.nome});
+      if(d&&calcStatus(calcResultado(d,c),c)==="OK")prevConf++;
+    });
+    prevScore=Math.round(prevConf/configs.length*100);
+  }
+  var delta=prevScore!==null?score-prevScore:null;
+
+  function getInfo(nomInd){
+    var d=dadosMes.find(function(x){return x.indicador===nomInd});
+    var c=configs.find(function(x){return x.nome===nomInd});
+    var r=d&&c?calcResultado(d,c):null;
+    return{d:d,c:c,r:r,s:c?calcStatus(r,c):"-",g:c?calcGap(r,c):null};
+  }
+
+  function MesSel(){
+    return React.createElement("select",{className:"sel",value:mesSel,onChange:function(ev){setMesSel(ev.target.value)}},
+      MESES.map(function(m,i){return React.createElement("option",{key:m,value:m},MESES_LABEL[i])})
+    );
+  }
+
+  function KpiRow(props){
+    return React.createElement("div",{className:"kpi-row"},
+      React.createElement("div",{className:"kpi"},
+        React.createElement("div",{className:"kpi-lbl"},"Score Geral"),
+        React.createElement("div",{className:"kpi-val",style:{color:"#1F4E79"}},score+"%"),
+        React.createElement("div",{className:"kpi-hint"},"de "+configs.length+" indicadores")
+      ),
+      React.createElement("div",{className:"kpi",style:{borderColor:"#22c55e"}},
+        React.createElement("div",{className:"kpi-lbl",style:{color:"#15803d"}},"Conformes"),
+        React.createElement("div",{className:"kpi-val",style:{color:"#15803d"}},conform),
+        React.createElement("div",{className:"kpi-hint"},"indicadores")
+      ),
+      React.createElement("div",{className:"kpi",style:{borderColor:"#f59e0b"}},
+        React.createElement("div",{className:"kpi-lbl",style:{color:"#92400e"}},"Atencao"),
+        React.createElement("div",{className:"kpi-val",style:{color:"#92400e"}},atenc),
+        React.createElement("div",{className:"kpi-hint"},"indicadores")
+      ),
+      React.createElement("div",{className:"kpi",style:{borderColor:"#ef4444"}},
+        React.createElement("div",{className:"kpi-lbl",style:{color:"#991b1b"}},"Criticos"),
+        React.createElement("div",{className:"kpi-val",style:{color:"#991b1b"}},crit),
+        React.createElement("div",{className:"kpi-hint"},"indicadores")
+      ),
+      React.createElement("div",{className:"kpi"},
+        React.createElement("div",{className:"kpi-lbl"},"Total Casos"),
+        React.createElement("div",{className:"kpi-val",style:{fontSize:22}},totalCasos.toLocaleString("pt-BR"))
+      )
+    );
+  }
+
+  return React.createElement("div",null,
+    // Header
+    React.createElement("header",{className:"hdr"},
+      React.createElement("div",null,
+        React.createElement("div",{style:{fontSize:18,fontWeight:700}},"INBURSA"),
+        React.createElement("div",{style:{fontSize:11,color:"#93c5fd",marginTop:2}},"Painel de Monitoramento Operacional")
+      ),
+      React.createElement("nav",{style:{display:"flex",gap:4}},
+        [{id:"dash",label:"Dashboard"},{id:"exec",label:"Painel Executivo"},{id:"cess",label:"Cessao & Portabilidade"},{id:"entr",label:"Entrada de Dados"},{id:"guia",label:"Como Ler"},{id:"normas",label:"Base Legal"}]
+        .map(function(item){
+          return React.createElement("button",{key:item.id,className:tab===item.id?"nb act":"nb",onClick:function(){setTab(item.id)}},item.label);
+        })
+      )
+    ),
+
+    // ── TAB DASHBOARD ──
+    React.createElement("div",{className:tab==="dash"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},
+        React.createElement("div",null,
+          React.createElement("div",{className:"pg-title"},"Indicadores Operacionais"),
+          React.createElement("div",{className:"pg-sub"},"Dados calculados automaticamente")
+        ),
+        React.createElement(MesSel,null)
+      ),
+      React.createElement(KpiRow,null),
+      React.createElement("div",{className:"card"},
+        React.createElement("div",{style:{overflowX:"auto"}},
+          React.createElement("table",null,
+            React.createElement("thead",null,
+              React.createElement("tr",null,
+                ["#","Indicador","Responsavel","Meta","Total","No Prazo","Resultado","Gap","Status","Mes Ant.","Tend.","YTD"]
+                .map(function(h){return React.createElement("th",{key:h},h)})
+              )
+            ),
+            React.createElement("tbody",null,
+              configs.map(function(c){
+                var d=dadosMes.find(function(x){return x.indicador===c.nome});
+                var r=d?calcResultado(d,c):null;
+                var st=calcStatus(r,c);
+                var gap=calcGap(r,c);
+                var ytd=calcYTD(c.nome,mesSel);
+                var prevD=mesIdx>0?getDado(MESES[mesIdx-1],c.nome):null;
+                var prevR=prevD?calcResultado(prevD,c):null;
+                var tend=calcTendencia(c.nome,mesSel);
+                return React.createElement("tr",{key:c.nome},
+                  React.createElement("td",{className:"mono",style:{color:"#94a3b8",textAlign:"center"}},c.numero),
+                  React.createElement("td",{style:{fontWeight:500,maxWidth:220}},c.nome),
+                  React.createElement("td",{style:{color:"#64748b",fontSize:12}},c.responsavel),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},fmtPct(c.meta)),
+                  React.createElement("td",{className:"mono",style:{textAlign:"right"}},d?fmtNum(d.total_casos):"--"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"right"}},d?fmtNum(d.dentro_prazo):"--"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center",fontWeight:600}},fmtPct(r)),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center",color:gap===null?"#94a3b8":gap>=0?"#15803d":"#991b1b"}},gap===null?"--":(gap>=0?"+":"")+(100*gap).toFixed(1)+"pp"),
+                  React.createElement("td",{style:{textAlign:"center"}},React.createElement(BadgeStatus,{s:st})),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center",color:"#64748b"}},fmtPct(prevR)),
+                  React.createElement("td",{style:{textAlign:"center",fontSize:12,color:tend==="Melhora"?"#15803d":tend==="Piora"?"#991b1b":"#64748b"}},tend),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},fmtPct(ytd))
+                );
+              })
+            )
+          )
+        )
+      )
+    ),
+
+    // ── TAB PAINEL EXECUTIVO ──
+    React.createElement("div",{className:tab==="exec"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},
+        React.createElement("div",null,
+          React.createElement("div",{className:"pg-title"},"Painel Executivo"),
+          React.createElement("div",{className:"pg-sub"},"Visao consolidada de performance operacional")
+        ),
+        React.createElement(MesSel,null)
+      ),
+      React.createElement("div",{className:"kpi-row"},
+        React.createElement("div",{className:"kpi"},React.createElement("div",{className:"kpi-lbl"},"Score"),React.createElement("div",{className:"kpi-val",style:{color:"#1F4E79"}},score+"%"),React.createElement("div",{className:"kpi-hint"},"conformes")),
+        React.createElement("div",{className:"kpi"},React.createElement("div",{className:"kpi-lbl"},"Delta"),React.createElement("div",{className:"kpi-val",style:{fontSize:22,color:delta===null?"#94a3b8":delta>=0?"#15803d":"#991b1b"}},delta===null?"--":(delta>=0?"+":"")+delta+"pp"),React.createElement("div",{className:"kpi-hint"},"vs. mes ant.")),
+        React.createElement("div",{className:"kpi"},React.createElement("div",{className:"kpi-lbl"},"Volume"),React.createElement("div",{className:"kpi-val",style:{fontSize:20}},totalCasos.toLocaleString("pt-BR")),React.createElement("div",{className:"kpi-hint"},"casos")),
+        React.createElement("div",{className:"kpi"},React.createElement("div",{className:"kpi-lbl"},"Conformes"),React.createElement("div",{className:"kpi-val",style:{color:"#15803d"}},conform),React.createElement("div",{className:"kpi-hint"},"de "+configs.length)),
+        React.createElement("div",{className:"kpi"},React.createElement("div",{className:"kpi-lbl"},"Criticos"),React.createElement("div",{className:"kpi-val",style:{color:"#991b1b"}},crit),React.createElement("div",{className:"kpi-hint"},"indicadores"))
+      ),
+      React.createElement("div",{className:"charts-grid"},
+        React.createElement("div",{className:"chart-card"},React.createElement("div",{className:"chart-lbl"},"Evolucao mensal — resultado medio"),React.createElement("div",{style:{position:"relative",height:240}},React.createElement("canvas",{id:"ch-e"}))),
+        React.createElement("div",{className:"chart-card"},React.createElement("div",{className:"chart-lbl"},"Top 5 gaps vs meta"),React.createElement("div",{style:{position:"relative",height:240}},React.createElement("canvas",{id:"ch-g"})))
+      ),
+      React.createElement("div",{className:"chart-card"},
+        React.createElement("div",{className:"chart-lbl"},"Volume de casos por responsavel"),
+        React.createElement("div",{style:{position:"relative",height:220}},React.createElement("canvas",{id:"ch-v"}))
+      ),
+      drilldown&&React.createElement("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,.5)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center"},onClick:function(){setDrilldown(null)}},
+        React.createElement("div",{style:{background:"#fff",borderRadius:16,padding:24,width:620,maxWidth:"90vw",maxHeight:"80vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,.3)"},onClick:function(ev){ev.stopPropagation()}},
+          React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}},
+            React.createElement("div",null,React.createElement("div",{style:{fontSize:18,fontWeight:600,color:"#1F4E79"}},drilldown),React.createElement("div",{style:{fontSize:13,color:"#64748b"}},"Detalhamento — "+MESES_LABEL[mesIdx])),
+            React.createElement("button",{onClick:function(){setDrilldown(null)},style:{background:"none",border:"none",fontSize:22,cursor:"pointer"}},"×")
+          ),
+          React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13}},
+            React.createElement("thead",null,React.createElement("tr",{style:{background:"#1F4E79"}},
+              ["Indicador","Casos","Resultado","Status"].map(function(h){return React.createElement("th",{key:h,style:{padding:"8px 12px",textAlign:"left",color:"#fff",fontSize:11}},h)})
+            )),
+            React.createElement("tbody",null,
+              configs.filter(function(c){return c.responsavel===drilldown}).map(function(c,idx){
+                var d=dadosMes.find(function(x){return x.indicador===c.nome});
+                var r=d?calcResultado(d,c):null;
+                var st=calcStatus(r,c);
+                return React.createElement("tr",{key:c.nome,style:{background:idx%2===0?"#fff":"#f8fafc"}},
+                  React.createElement("td",{style:{padding:"9px 12px",fontWeight:500}},c.nome),
+                  React.createElement("td",{style:{padding:"9px 12px",textAlign:"center",fontFamily:"monospace"}},(d&&d.total_casos)||"--"),
+                  React.createElement("td",{style:{padding:"9px 12px",textAlign:"center",fontWeight:600,fontFamily:"monospace"}},fmtPct(r)),
+                  React.createElement("td",{style:{padding:"9px 12px",textAlign:"center"}},React.createElement(BadgeStatus,{s:st}))
+                );
+              })
+            )
+          )
+        )
+      )
+    ),
+
+    // ── TAB CESSÃO & PORTABILIDADE ──
+    React.createElement("div",{className:tab==="cess"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},
+        React.createElement("div",null,React.createElement("div",{className:"pg-title"},"Cessao & Portabilidade"),React.createElement("div",{className:"pg-sub"},"Indicadores operacionais de cessao e portabilidade consignada")),
+        React.createElement(MesSel,null)
+      ),
+      React.createElement("div",{className:"card",style:{marginBottom:16}},
+        React.createElement("div",{className:"card-hdr"},"Troca de Averbaçao — SLA por Convenio"),
+        React.createElement("div",{style:{overflowX:"auto"}},
+          React.createElement("table",null,
+            React.createElement("thead",null,React.createElement("tr",null,["Convenio","SLA (dias)","Meta","Resultado","Status","Obs."].map(function(h){return React.createElement("th",{key:h},h)}))),
+            React.createElement("tbody",null,
+              [
+                {n:"INSS/Dataprev",sla:5,obs:"Convenio principal"},
+                {n:"SIAPE",sla:10,obs:"SLA 10 dias"},
+                {n:"Estadual",sla:10,obs:"eConsig"},
+                {n:"Cred. Trabalhador",sla:5,obs:"--"}
+              ].map(function(row){
+                var info=getInfo("Troca de Averbaçao — SLA");
+                return React.createElement("tr",{key:row.n},
+                  React.createElement("td",{style:{fontWeight:row.n==="INSS/Dataprev"?600:400}},row.n),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},row.sla+"d"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},"95%"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},row.n==="INSS/Dataprev"?fmtPct(info.r):"--"),
+                  React.createElement("td",{style:{textAlign:"center"}},row.n==="INSS/Dataprev"?React.createElement(BadgeStatus,{s:info.s}):React.createElement("span",{className:"badge bn"},"--")),
+                  React.createElement("td",{style:{fontSize:12,color:"#64748b"}},row.obs)
+                );
+              })
+            )
+          )
+        )
+      ),
+      React.createElement("div",{className:"card"},
+        React.createElement("div",{className:"card-hdr"},"Portabilidade — Retidos Indevidos"),
+        React.createElement("div",{style:{overflowX:"auto"}},
+          React.createElement("table",null,
+            React.createElement("thead",null,React.createElement("tr",null,["Indicador","Meta","Total","Indevidos","%","Status"].map(function(h){return React.createElement("th",{key:h},h)}))),
+            React.createElement("tbody",null,
+              (function(){
+                var info=getInfo("Portabilidade — Retidos Indevidos");
+                return React.createElement("tr",null,
+                  React.createElement("td",{style:{fontWeight:500}},"Portabilidade — Retidos Indevidos"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},"<= 5%"),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},(info.d&&info.d.total_casos)||0),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center"}},(info.d&&info.d.dentro_prazo)||0),
+                  React.createElement("td",{className:"mono",style:{textAlign:"center",fontWeight:600}},fmtPct(info.r)),
+                  React.createElement("td",{style:{textAlign:"center"}},React.createElement(BadgeStatus,{s:info.s}))
+                );
+              })()
+            )
+          )
+        ),
+        React.createElement("div",{className:"note note-warn"},"Meta menor ou igual a 5%. Semaforo invertido.")
+      )
+    ),
+
+    // ── TAB ENTRADA DE DADOS ──
+    React.createElement("div",{className:tab==="entr"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},
+        React.createElement("div",null,React.createElement("div",{className:"pg-title"},"Entrada de Dados"),React.createElement("div",{className:"pg-sub"},"Preencha Total de Casos e Dentro do Prazo")),
+        React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center"}},
+          React.createElement(MesSel,null),
+          React.createElement("button",{className:"save-all-btn",onClick:salvarTodos,disabled:saving},saving?"Salvando...":"Salvar todos")
+        )
+      ),
+      React.createElement("div",{className:"form-grid"},
+        configs.map(function(c){
+          var ed=editData[c.nome]||{t:0,p:0};
+          var r=ed.t>0?ed.p/ed.t:null;
+          var st=calcStatus(r,c);
+          var labels=LABELS_ESPECIAIS[c.nome]||LABELS_PADRAO;
+          return React.createElement("div",{key:c.nome,className:"form-card"},
+            React.createElement("div",{className:"form-ind"},c.numero+". "+c.nome),
+            React.createElement("div",{className:"form-resp"},c.responsavel+" — Meta: "+fmtPct(c.meta)),
+            React.createElement("div",{className:"form-row"},
+              React.createElement("div",{className:"form-field"},
+                React.createElement("label",null,labels.total),
+                React.createElement("input",{type:"number",min:"0",value:ed.t||"",placeholder:"0",onChange:function(ev){var v=parseInt(ev.target.value)||0;setEditData(function(prev){var n={...prev};n[c.nome]={...n[c.nome],t:v};return n})}})
+              ),
+              React.createElement("div",{className:"form-field"},
+                React.createElement("label",null,labels.prazo),
+                React.createElement("input",{type:"number",min:"0",value:ed.p||"",placeholder:"0",onChange:function(ev){var v=parseInt(ev.target.value)||0;setEditData(function(prev){var n={...prev};n[c.nome]={...n[c.nome],p:v};return n})}})
+              )
+            ),
+            React.createElement("div",{style:{fontSize:16,fontWeight:600,textAlign:"center",padding:6,borderRadius:6,marginTop:8,background:st==="OK"?"#dcfce7":st==="WARN"?"#fef3c7":st==="ERR"?"#fee2e2":"#f8fafc",color:st==="OK"?"#15803d":st==="WARN"?"#92400e":st==="ERR"?"#991b1b":"#64748b"}},
+              (r!==null?(100*r).toFixed(1)+"%":"--")+" "+(st==="OK"?"Conforme":st==="WARN"?"Atencao":st==="ERR"?"Critico":"")
+            )
+          );
+        })
+      )
+    ),
+
+    // ── TAB COMO LER ──
+    React.createElement("div",{className:tab==="guia"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},React.createElement("div",null,React.createElement("div",{className:"pg-title"},"Como Ler Este Dashboard"),React.createElement("div",{className:"pg-sub"},"Guia para interpretar os indicadores"))),
+      React.createElement("div",{className:"card",style:{padding:"0"}},
+        React.createElement("div",{className:"card-hdr"},"O que e este dashboard?"),
+        React.createElement("div",{style:{padding:"16px 20px",lineHeight:1.8,color:"#374151"}},
+          React.createElement("p",null,"O Painel de Monitoramento Operacional INBURSA acompanha mensalmente 20 indicadores de performance distribuidos em 5 areas: Operacional, Atendimento, Qualidade, Canais Criticos e Consignado Publico."),
+          React.createElement("p",{style:{marginTop:10}},"Resultado = Dentro do Prazo / Total de Casos. Para indicadores de erro (direcao <=), menor % = melhor."),
+          React.createElement("p",{style:{marginTop:10}},"Gap = Resultado - Meta. Positivo = acima da meta (bom). Negativo = abaixo da meta (risco). Medido em pontos percentuais (pp).")
+        )
+      )
+    ),
+
+    // ── TAB BASE LEGAL ──
+    React.createElement("div",{className:tab==="normas"?"pg act":"pg"},
+      React.createElement("div",{className:"top-bar"},React.createElement("div",null,React.createElement("div",{className:"pg-title"},"Base Legal e Regulatoria"),React.createElement("div",{className:"pg-sub"},"Normas que fundamentam cada indicador"))),
+      React.createElement("div",{style:{background:"#eff6ff",border:"0.5px solid #bfdbfe",borderRadius:12,padding:16,marginBottom:16,fontSize:13,color:"#1d4ed8"}},
+        React.createElement("strong",null,"Sobre este painel:")," Os indicadores monitorados pelo INBURSA estao alinhados com as principais normas do Banco Central do Brasil e do Conselho Monetario Nacional. O cumprimento dessas metas demonstra conformidade regulatoria."
+      ),
+      [
+        {norma:"Resolucao CMN 5.057/2022",tema:"Portabilidade de Credito Consignado",cor:"#1F4E79",inds:["Portabilidade — Retidos Indevidos","Troca de Averbaçao — SLA","Troca de Averbaçao — Qualidade"]},
+        {norma:"Resolucao CMN 4.860/2020",tema:"Ouvidoria e Tratamento de Reclamacoes",cor:"#7c3aed",inds:["Reincidência de Reclamações","SLA SAC","SLA Ouvidoria","BACEN","Consumidor.gov","PROCON"]},
+        {norma:"Resolucao BCB 4/2020",tema:"Canais de Atendimento Regulatorios",cor:"#dc2626",inds:["BACEN","Consumidor.gov","PROCON"]},
+        {norma:"Resolucao CMN 3.954/2011",tema:"Correspondentes Bancarios",cor:"#047857",inds:["Monitoria Qualidade Correspondentes","Divergências Operacionais","Estorno/Reembolso no Prazo"]},
+        {norma:"IN INSS/PRES 28/2008",tema:"Credito Consignado INSS",cor:"#b45309",inds:["Liberação de Margem até 5 dias","Saldo de Porte em até 5 dias","Boas-Vindas Geral","Comunicação de Negativa"]}
+      ].map(function(item){
+        return React.createElement("div",{key:item.norma,className:"card",style:{marginBottom:12}},
+          React.createElement("div",{style:{background:item.cor,color:"#fff",padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+            React.createElement("div",{style:{fontWeight:700,fontSize:14}},item.norma),
+            React.createElement("div",{style:{background:"rgba(255,255,255,.2)",borderRadius:6,padding:"3px 10px",fontSize:12}},item.tema)
+          ),
+          React.createElement("div",{style:{padding:"12px 16px",display:"flex",flexWrap:"wrap",gap:6}},
+            item.inds.map(function(ind){return React.createElement("span",{key:ind,style:{background:"#f1f5f9",color:"#334155",fontSize:11,padding:"3px 8px",borderRadius:12}},ind)})
+          )
+        );
+      })
+    ),
+
+    // Toast
+    React.createElement("div",{className:toastVis?"toast show":"toast"},toastMsg)
+  );
+}
+
+}
+},function(e){e.O(0,[971,23,744],function(){return e(e.s=193)}),_N_E=e.O()}]);
+</script>
+
+<script>
+// Mount the React app
+(function mount() {
+  setTimeout(function() {
+    try {
+      var mod = window.__wp_require(6774);
+      var Component = mod && (mod.default || mod);
+      if (typeof Component === 'function') {
+        var root = document.getElementById('root');
+        if (root && window.ReactDOM && ReactDOM.createRoot) {
+          ReactDOM.createRoot(root).render(React.createElement(Component, null));
+        } else if (root && window.ReactDOM) {
+          ReactDOM.render(React.createElement(Component, null), root);
+        }
+      } else {
+        mount();
+      }
+    } catch(e) {
+      console.error('Mount error:', e);
+      setTimeout(mount, 300);
+    }
+  }, 100);
+})();
+</script>
+<div style="position:fixed;bottom:20px;right:20px;background:#f59e0b;color:#78350f;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none">MODO DEMO</div></body>
+</html>
